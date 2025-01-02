@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,4 +43,11 @@ public class KeyGenerationService {
         this.keyRepository.insert(entity);
     }
 
+    public Key getKeyByKeyHash(String keyHash) {
+        Optional<Key> key = this.keyRepository.findKeyByKey_hash(keyHash);
+        if(key.isPresent()){
+            return key.get();
+        }
+        throw new RuntimeException("Key not found");
+    }
 }

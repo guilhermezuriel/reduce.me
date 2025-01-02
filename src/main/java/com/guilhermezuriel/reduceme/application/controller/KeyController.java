@@ -5,21 +5,24 @@ import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
 import com.guilhermezuriel.reduceme.application.services.keygen.KeyGenerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("key/")
+@RequestMapping("v1")
 @RequiredArgsConstructor
 public class KeyController {
 
     private final KeyGenerationService keyGenerationService;
 
-    @PostMapping("create")
+    @PostMapping("key/create")
     public ResponseEntity<Void> createKey(@RequestBody String url) {
        this.keyGenerationService.generateKeys(url);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{keyHash}")
+    public ResponseEntity<Key> getKey(@PathVariable String keyHash) {
+        var key = this.keyGenerationService.getKeyByKeyHash(keyHash);
+        return ResponseEntity.ok().body(key);
     }
 }
