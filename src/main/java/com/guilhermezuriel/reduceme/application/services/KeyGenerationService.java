@@ -1,4 +1,4 @@
-package com.guilhermezuriel.reduceme.application.services.keygen;
+package com.guilhermezuriel.reduceme.application.services;
 
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
@@ -29,22 +29,22 @@ public class KeyGenerationService {
         }
         urlHashBytes = Base64.getEncoder().encode(urlHashBytes);
 
-        var key_hash = Arrays.toString(urlHashBytes).substring(0, 7);
-        boolean existsKey = this.keyRepository.existsKeyByKey_hash(key_hash);
+        var keyHash = Arrays.toString(urlHashBytes).substring(0, 7);
+        boolean existsKey = this.keyRepository.existsKeyByKeyHash(keyHash);
 
         if(existsKey){
             return;
         }
 
-        var entity = Key.builder()
-                .key_hash(key_hash)
-                .build();
+        var entity = new Key();
+        entity.setKeyHash(keyHash);
+        entity.setOriginalUrl(url);
 
         this.keyRepository.insert(entity);
     }
 
     public Key getKeyByKeyHash(String keyHash) {
-        Optional<Key> key = this.keyRepository.findKeyByKey_hash(keyHash);
+        Optional<Key> key = this.keyRepository.findKeyByKeyHash(keyHash);
         if(key.isPresent()){
             return key.get();
         }

@@ -10,8 +10,8 @@ import java.util.UUID;
 @Repository
 public interface KeyRepository extends CassandraRepository<Key, UUID> {
 
-    boolean existsKeyByKey_hash(String key);
+    boolean existsKeyByKeyHash(String keyHash);
 
-    Optional<Key> findKeyByKey_hash(String key);
+    Optional<Key> findKeyByKeyHash(String keyHash);
 
 }

@@ -1,25 +1,24 @@
 package com.guilhermezuriel.reduceme.application.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.util.UUID;
 
 @Table
-@Data
-@Builder
+@Getter
+@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class Key {
 
-    @PrimaryKey @Id
-    private final UUID key_id;
+    @Id
+    private UUID keyId;
 
-    private String key_hash;
+    private String keyHash;
 
-    private String original_url;
+    private String originalUrl;
 
 }
