@@ -4,4 +4,5 @@ spring:
   cassandra:
     port: 9042
     contact-points: 127.0.0.1:9042
-    keyspace-name: keyspace
+    keyspace-name: my_keyspace
+    schema-action: create_if_not_exists

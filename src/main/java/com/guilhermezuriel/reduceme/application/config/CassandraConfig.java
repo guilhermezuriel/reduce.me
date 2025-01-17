@@ -1,9 +1,11 @@
 package com.guilhermezuriel.reduceme.application.config;
 
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.cassandra.config.AbstractCassandraConfiguration;
 
-public class CassandraConfig extends AbstractCassandraConfiguration implements BeanClassLoaderAware {
+@Configuration
+public class CassandraConfig extends AbstractCassandraConfiguration{
 
     @Override
     protected String getContactPoints() {
@@ -12,6 +14,6 @@ public class CassandraConfig extends AbstractCassandraConfiguration implements B
 
     @Override
     protected String getKeyspaceName() {
-        return "keyspace";
+        return "my_keyspace";
     }
 }

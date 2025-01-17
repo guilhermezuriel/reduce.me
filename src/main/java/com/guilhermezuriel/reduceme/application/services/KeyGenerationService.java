@@ -1,8 +1,13 @@
 package com.guilhermezuriel.reduceme.application.services;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.cassandra.core.CassandraOperations;
+import org.springframework.data.cassandra.core.CassandraTemplate;
+import org.springframework.data.cassandra.core.query.Criteria;
+import org.springframework.data.cassandra.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -19,28 +24,20 @@ public class KeyGenerationService {
 
     private final KeyRepository keyRepository;
 
-    public void generateKeys(String url) {
+    public Key generateKeys(CreateReducedUrlForm form) {
         byte[] urlHashBytes;
         try {
             MessageDigest algorithm = MessageDigest.getInstance("MD-5");
-            urlHashBytes = algorithm.digest(url.getBytes(StandardCharsets.UTF_8));
+            urlHashBytes = algorithm.digest(form.url().getBytes(StandardCharsets.UTF_8));
         }catch (NoSuchAlgorithmException e){
             urlHashBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
         }
         urlHashBytes = Base64.getEncoder().encode(urlHashBytes);
 
-        var keyHash = Arrays.toString(urlHashBytes).substring(0, 7);
-        boolean existsKey = this.keyRepository.existsKeyByKeyHash(keyHash);
+        var keyHash = new String(urlHashBytes).substring(0, 7);
+        Key key = this.keyRepository.insert(new Key(UUID.randomUUID(), keyHash, form.url()));
 
-        if(existsKey){
-            return;
-        }
-
-        var entity = new Key();
-        entity.setKeyHash(keyHash);
-        entity.setOriginalUrl(url);
-
-        this.keyRepository.insert(entity);
+        return key;
     }
 
     public Key getKeyByKeyHash(String keyHash) {

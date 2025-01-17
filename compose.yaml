@@ -4,3 +4,6 @@ services:
     container_name: mycassandra
     ports:
       - '9042:9042'
+    environment:
+      CASSANDRA_USERNAME: docker
+      CASSANDRA_PASSWORD: docker

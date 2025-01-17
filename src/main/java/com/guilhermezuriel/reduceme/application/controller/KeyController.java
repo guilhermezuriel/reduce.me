@@ -1,6 +1,7 @@
 package com.guilhermezuriel.reduceme.application.controller;
 
 import com.guilhermezuriel.reduceme.application.model.Key;
+import com.guilhermezuriel.reduceme.application.services.CreateReducedUrlForm;
 import com.guilhermezuriel.reduceme.application.services.KeyGenerationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +17,9 @@ public class KeyController {
     }
 
     @PostMapping("key/create")
-    public ResponseEntity<Void> createKey(@RequestBody String url) {
-       this.keyGenerationService.generateKeys(url);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Key> createKey(@RequestBody CreateReducedUrlForm form) {
+      var key =  this.keyGenerationService.generateKeys(form);
+        return ResponseEntity.ok().body(key);
     }
 
     @GetMapping("/{keyHash}")
