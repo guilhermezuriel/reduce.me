@@ -1,19 +1,17 @@
-package com.guilhermezuriel.reduceme.application.services;
+package com.guilhermezuriel.reduceme.application.services.keygen;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
+import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.cassandra.core.CassandraOperations;
-import org.springframework.data.cassandra.core.CassandraTemplate;
-import org.springframework.data.cassandra.core.query.Criteria;
-import org.springframework.data.cassandra.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,6 +24,12 @@ public class KeyGenerationService {
 
     public Key generateKeys(CreateReducedUrlForm form) {
         byte[] urlHashBytes;
+        try {
+            var url = URI.create(form.url()).toURL();
+            } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Invalid URL", e);
+        }
+
         try {
             MessageDigest algorithm = MessageDigest.getInstance("MD-5");
             urlHashBytes = algorithm.digest(form.url().getBytes(StandardCharsets.UTF_8));
@@ -40,11 +44,11 @@ public class KeyGenerationService {
         return key;
     }
 
-    public Key getKeyByKeyHash(String keyHash) {
+    public String getKeyByKeyHash(String keyHash) {
         Optional<Key> key = this.keyRepository.findKeyByKeyHash(keyHash);
-        if(key.isPresent()){
-            return key.get();
+        if(key.isEmpty()){
+            throw new IllegalArgumentException("Key not found");
         }
-        throw new RuntimeException("Key not found");
+        return key.get().getOriginalUrl();
     }
 }

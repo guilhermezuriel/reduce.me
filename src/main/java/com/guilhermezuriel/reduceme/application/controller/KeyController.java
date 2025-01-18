@@ -1,10 +1,11 @@
 package com.guilhermezuriel.reduceme.application.controller;
 
 import com.guilhermezuriel.reduceme.application.model.Key;
-import com.guilhermezuriel.reduceme.application.services.CreateReducedUrlForm;
-import com.guilhermezuriel.reduceme.application.services.KeyGenerationService;
+import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
+import com.guilhermezuriel.reduceme.application.services.keygen.KeyGenerationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("v1")
@@ -23,8 +24,10 @@ public class KeyController {
     }
 
     @GetMapping("/{keyHash}")
-    public ResponseEntity<Key> getKey(@PathVariable String keyHash) {
-        var key = this.keyGenerationService.getKeyByKeyHash(keyHash);
-        return ResponseEntity.ok().body(key);
+    public RedirectView getKey(@PathVariable String keyHash) {
+        var original_url = this.keyGenerationService.getKeyByKeyHash(keyHash);
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl(original_url);
+        return redirectView;
     }
 }
