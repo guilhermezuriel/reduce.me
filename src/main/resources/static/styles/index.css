@@ -1,0 +1,23 @@
+body{
+    background-color: #172A37;
+}
+
+main{
+    height: 850px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+input{
+    border: none;
+    width: 540px;
+    background: none;
+    cursor: text;
+    border-bottom: gray 1px;
+    height: 50px;
+}
+
+input:focus{
+}
+
