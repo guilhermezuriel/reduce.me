@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/")
 public class IndexController {
 
-    @GetMapping("/home")
+    @GetMapping("/")
     public String indexHtml(Model model) {
         model.addAttribute("url");
         return "index";

@@ -7,10 +7,20 @@
 </head>
 <body>
     <main>
-        <form action="" method="post">
-            <input type="text"/>
-            <button><img src=""></button>
+        <form action="/" method="post">
+            <div class="reducedInput">
+                <label>
+                    <input type="text" placeholder="https://www.baeldung.com/"/>
+                </label>
+                <div>
+                    <button type="submit">
+                        <img th:src="@{/assets/key-return.svg}" alt="copy">
+                    </button>
+                </div>
+            </div>
+            <span class="line"></span>
         </form>
+<!--        <span class="line"></span>-->
     </main>
 </body>
 </html>

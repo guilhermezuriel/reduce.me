@@ -4,9 +4,16 @@ body{
 
 main{
     height: 850px;
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+}
+
+form{
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-items: center;
+    flex-direction: column;
 }
 
 input{
@@ -14,10 +21,35 @@ input{
     width: 540px;
     background: none;
     cursor: text;
-    border-bottom: gray 1px;
-    height: 50px;
+    height: 32px;
+    display: flex;
+    font-size: 20px;
+    color: #f1f1f1;
 }
 
 input:focus{
+    outline: none;
 }
 
+.reducedInput{
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 2px;
+}
+
+.line{
+    width: 630px;
+    height: 2px;
+    background-color: #ffffff;
+    bottom: 1px;
+
+}
+
+button {
+    background: none;
+    border: none;
+}
+
+.disabled{
+    display: none;
+}
