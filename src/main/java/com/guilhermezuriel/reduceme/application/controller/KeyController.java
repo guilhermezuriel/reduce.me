@@ -17,8 +17,9 @@ public class KeyController {
         this.keyGenerationService = keyGenerationService;
     }
 
-    @PostMapping("key/create")
+    @PostMapping("/key/create")
     public ResponseEntity<Key> createKey(@RequestBody CreateReducedUrlForm form) {
+        System.out.println(form);
       var key =  this.keyGenerationService.generateKeys(form);
         return ResponseEntity.ok().body(key);
     }

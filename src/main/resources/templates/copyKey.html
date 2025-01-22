@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reduce.me</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900">
+<main class=" h-screen justify-items-center content-center">
+    <form th:object="${form}" class="flex align-items-center justify-items-center flex-col">
+        <div class="focus:outline-none hover:bg-slate-800/10 hover:rounded-sm bg-slate-900 flex items-center justify-items-center gap-5 p-10">
+            <p th:text="${form.url}" class="border-none w-96 h-8 flex text-xl text-slate-100 ">www.reduceme/kdflknad</p>
+            <div>
+                <button type="submit">
+                    <img th:src="@{/assets/copy.svg}" alt="copy">
+                </button>
+            </div>
+        </div>
+        <span class="line"></span>
+    </form>
+</main>
+</body>
+</html>
