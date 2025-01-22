@@ -1,5 +1,6 @@
 package com.guilhermezuriel.reduceme.application.services.keygen;
 
+import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
@@ -24,10 +25,10 @@ public class KeyGenerationService {
 
     public Key generateKeys(CreateReducedUrlForm form) {
         byte[] urlHashBytes;
-        try {
-            var url = URI.create(form.url()).toURL();
-            } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Invalid URL", e);
+        var isValidUrl = Utils.isValidUrl(form.url());
+
+        if(Boolean.FALSE.equals(isValidUrl)){
+            throw new RuntimeException("Invalid URL");
         }
 
         try {

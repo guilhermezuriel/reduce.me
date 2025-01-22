@@ -6,3 +6,5 @@ spring:
     contact-points: 127.0.0.1:9042
     keyspace-name: my_keyspace
     schema-action: create_if_not_exists
+reduceme:
+  api_url_base: "http://localhost:8080/"

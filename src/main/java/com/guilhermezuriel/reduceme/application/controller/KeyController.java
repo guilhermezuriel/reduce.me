@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
-@RequestMapping("v1")
+@RequestMapping
 public class KeyController {
 
     private KeyGenerationService keyGenerationService;
@@ -19,8 +19,7 @@ public class KeyController {
 
     @PostMapping("/key/create")
     public ResponseEntity<Key> createKey(@RequestBody CreateReducedUrlForm form) {
-        System.out.println(form);
-      var key =  this.keyGenerationService.generateKeys(form);
+        var key =  this.keyGenerationService.generateKeys(form);
         return ResponseEntity.ok().body(key);
     }
 
