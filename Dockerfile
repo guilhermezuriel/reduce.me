@@ -1,7 +1,7 @@
 FROM openjdk:21
 LABEL authors="guilhermezuriel"
 
+COPY target/reduceme.jar app/reduceme.jar
 WORKDIR /app
-COPY target/seu-app.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "reduceme.jar"]

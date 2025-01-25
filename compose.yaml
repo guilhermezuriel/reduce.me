@@ -7,8 +7,13 @@ services:
       - "8080:8080"
     volumes:
       - .:/app
-    env_file:
-      - .env.prod
+    environment:
+      DB_PORT: ${DB_PORT}
+      DB_CONTACT: ${DB_CONTACT}
+      DB_KEYSPACE: ${DB_KEYSPACE}
+      API_URL: ${API_URL}
+
+
   cassandra:
     image: 'cassandra:latest'
     container_name: mycassandra
