@@ -8,5 +8,6 @@ spring:
     schema-action: create_if_not_exists
     username: cassandra
     password: cassandra
+    local-datacenter: datacenter1
 reduceme:
   api_url_base: http://localhost:8080/

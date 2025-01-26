@@ -7,15 +7,16 @@ services:
     ports:
       - "9042:9042"
     healthcheck:
-      test: [ "CMD-SHELL", "cqlsh -e 'describe keyspaces;'" ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra" ]
+      interval: 20s
+      timeout: 20s
+      retries: 10
+      start_period: 60s
   reduce_api:
     container_name: reduce-app
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     volumes:

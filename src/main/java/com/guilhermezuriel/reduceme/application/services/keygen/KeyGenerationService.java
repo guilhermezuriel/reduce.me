@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,9 +41,8 @@ public class KeyGenerationService {
         urlHashBytes = Base64.getEncoder().encode(urlHashBytes);
 
         var keyHash = new String(urlHashBytes).substring(0, 7);
-        Key key = this.keyRepository.insert(new Key(UUID.randomUUID(), keyHash, form.url()));
 
-        return key;
+        return this.keyRepository.insert(new Key(UUID.randomUUID(), keyHash, form.url(), LocalDateTime.now()));
     }
 
     public String getKeyByKeyHash(String keyHash) {
