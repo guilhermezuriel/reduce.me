@@ -1,0 +1,33 @@
+services:
+  cassandra:
+    image: 'cassandra:latest'
+    container_name: cassandra
+    networks:
+      - reduce-network
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'describe keyspaces;'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+  reduce_api:
+    container_name: reduce-app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./target:/app
+    networks:
+      - reduce-network
+    environment:
+      - SPRING_CASSANDRA_CONTACT_POINTS = cassandra
+      - SPRING_CASSANDRA_PORT = 9042
+    depends_on:
+       cassandra:
+        condition: service_healthy
+networks:
+  reduce-network:
+      driver: bridge

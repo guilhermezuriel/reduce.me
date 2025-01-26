@@ -2,9 +2,11 @@ spring:
   application:
     name: "Reduce.me"
   cassandra:
-    port: ${DB_PORT}
-    contact-points: ${DB_CONTACT}
-    keyspace-name: ${DB_KEYSPACE}
+    port: 9042
+    contact-points: cassandra
+    keyspace-name: my_keyspace
     schema-action: create_if_not_exists
+    username: cassandra
+    password: cassandra
 reduceme:
-  api_url_base: ${API_URL}
+  api_url_base: http://localhost:8080/
