@@ -25,31 +25,30 @@ public class RunCassandraMigrations implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.v1_create_key_space();
-        this.v2_create_key_table();
+        this.v1_create_key_table();
     }
 
     private final InetSocketAddress contactPoint = new InetSocketAddress("cassandra", 9042);
 
-    public void v1_create_key_space() {
-        log.info("Executing v1_create_my_keyspace");
-        try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint)
-                .withLocalDatacenter("datacenter1")
-                .build()) {
-            CqlSpecification createKeyspace = SpecificationBuilder.createKeyspace("my_keyspace")
-                    .ifNotExists()
-                    .with(KeyspaceOption.REPLICATION, KeyspaceAttributes.newSimpleReplication())
-                    .with(KeyspaceOption.DURABLE_WRITES, true);
-            String cql = CqlGenerator.toCql(createKeyspace);
-            session.execute(cql);
-        }catch (Exception e) {
-            log.error("Some error occurred while executing v1_create_my_keyspace", e);
-        }
-    }
+//    public void v1_create_key_space() {
+//        log.info("Executing v1_create_my_keyspace");
+//        try(CqlSession session = CqlSession.builder()
+//                .addContactPoint(contactPoint)
+//                .withLocalDatacenter("datacenter1")
+//                .build()) {
+//            CqlSpecification createKeyspace = SpecificationBuilder.createKeyspace("my_keyspace")
+//                    .ifNotExists()
+//                    .with(KeyspaceOption.REPLICATION, KeyspaceAttributes.newSimpleReplication())
+//                    .with(KeyspaceOption.DURABLE_WRITES, true);
+//            String cql = CqlGenerator.toCql(createKeyspace);
+//            session.execute(cql);
+//        }catch (Exception e) {
+//            log.error("Some error occurred while executing v1_create_my_keyspace", e);
+//        }
+//    }
 
-    public void v2_create_key_table() throws Exception {
-        log.info("Executing v2_create_key_table");
+    public void v1_create_key_table() throws Exception {
+        log.info("Executing v1_create_key_table");
         try(CqlSession session = CqlSession.builder()
                 .addContactPoint(contactPoint)
                 .withKeyspace("my_keyspace")
@@ -65,7 +64,7 @@ public class RunCassandraMigrations implements InitializingBean {
                     """;
             session.execute(cql);
         }catch (Exception e) {
-            log.error("Some error occurred while executing v2_create_key_table", e);
+            log.error("Some error occurred while executing v1_create_key_table", e);
         }
     }
 }

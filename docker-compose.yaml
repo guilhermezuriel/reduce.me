@@ -23,12 +23,11 @@ services:
       - ./target:/app
     networks:
       - reduce-network
-    environment:
-      - SPRING_CASSANDRA_CONTACT_POINTS = cassandra
-      - SPRING_CASSANDRA_PORT = 9042
     depends_on:
        cassandra:
         condition: service_healthy
+    env_file:
+      - .env.local.docker
 networks:
   reduce-network:
       driver: bridge
