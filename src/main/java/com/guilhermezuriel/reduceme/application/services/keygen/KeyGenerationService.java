@@ -3,6 +3,7 @@ package com.guilhermezuriel.reduceme.application.services.keygen;
 import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
+import com.guilhermezuriel.reduceme.application.services.keygen.dto.KeyDto;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,25 +25,19 @@ public class KeyGenerationService {
 
     private final KeyRepository keyRepository;
 
-    public Key generateKeys(CreateReducedUrlForm form) {
-        byte[] urlHashBytes;
+    public KeyDto generateKeys(CreateReducedUrlForm form) {
         var isValidUrl = Utils.isValidUrl(form.url());
-
         if(Boolean.FALSE.equals(isValidUrl)){
             throw new RuntimeException("Invalid URL");
         }
-
-        try {
-            MessageDigest algorithm = MessageDigest.getInstance("MD-5");
-            urlHashBytes = algorithm.digest(form.url().getBytes(StandardCharsets.UTF_8));
-        }catch (NoSuchAlgorithmException e){
-            urlHashBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-        }
-        urlHashBytes = Base64.getEncoder().encode(urlHashBytes);
-
-        var keyHash = new String(urlHashBytes).substring(0, 7);
-
-        return this.keyRepository.insert(new Key(UUID.randomUUID(), keyHash, form.url(), LocalDateTime.now()));
+        String keyHash = Utils.digestUrl(form.url());
+        Key keyEntity =  Key.builder()
+                .id(UUID.randomUUID())
+                .originalUrl(form.url())
+                .keyHash(keyHash)
+                .build();
+        this.keyRepository.insert(keyEntity);
+        return KeyDto.of(keyEntity);
     }
 
     public String getKeyByKeyHash(String keyHash) {
@@ -52,4 +47,6 @@ public class KeyGenerationService {
         }
         return key.get().getOriginalUrl();
     }
+
+
 }

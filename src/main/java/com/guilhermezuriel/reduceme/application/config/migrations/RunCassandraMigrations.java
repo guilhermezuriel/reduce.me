@@ -1,19 +1,13 @@
 package com.guilhermezuriel.reduceme.application.config.migrations;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.metadata.EndPoint;
-import com.datastax.oss.driver.api.core.type.DataType;
-import com.datastax.oss.driver.api.core.type.DataTypes;
-import com.datastax.oss.protocol.internal.ProtocolConstants;
-import com.guilhermezuriel.reduceme.application.config.CassandraConfig;
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.cassandra.core.cql.generator.CqlGenerator;
-import org.springframework.data.cassandra.core.cql.keyspace.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
@@ -28,29 +22,28 @@ public class RunCassandraMigrations implements InitializingBean {
         this.v1_create_key_table();
     }
 
-    private final InetSocketAddress contactPoint = new InetSocketAddress("cassandra", 9042);
+    @Value("${spring.cassandra.contact-points}")
+    private String contactPoints;
 
-//    public void v1_create_key_space() {
-//        log.info("Executing v1_create_my_keyspace");
-//        try(CqlSession session = CqlSession.builder()
-//                .addContactPoint(contactPoint)
-//                .withLocalDatacenter("datacenter1")
-//                .build()) {
-//            CqlSpecification createKeyspace = SpecificationBuilder.createKeyspace("my_keyspace")
-//                    .ifNotExists()
-//                    .with(KeyspaceOption.REPLICATION, KeyspaceAttributes.newSimpleReplication())
-//                    .with(KeyspaceOption.DURABLE_WRITES, true);
-//            String cql = CqlGenerator.toCql(createKeyspace);
-//            session.execute(cql);
-//        }catch (Exception e) {
-//            log.error("Some error occurred while executing v1_create_my_keyspace", e);
-//        }
-//    }
+    @Value("${spring.cassandra.port}")
+    private int port;
+
+    @Getter
+    @Setter
+    private InetSocketAddress contactPoint;
+
+    @PostConstruct
+    public void init() {
+        log.info("------------------- Verifying migrations -----------------");
+        var contactPoint = new InetSocketAddress(contactPoints, port);
+        this.setContactPoint(contactPoint);
+    }
 
     public void v1_create_key_table() throws Exception {
         log.info("Executing v1_create_key_table");
+        var contactPoint1 = this.getContactPoint();
         try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint)
+                .addContactPoint(contactPoint1)
                 .withKeyspace("my_keyspace")
                 .withLocalDatacenter("datacenter1")
                 .build()) {

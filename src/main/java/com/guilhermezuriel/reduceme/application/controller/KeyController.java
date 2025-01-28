@@ -1,8 +1,9 @@
 package com.guilhermezuriel.reduceme.application.controller;
 
-import com.guilhermezuriel.reduceme.application.model.Key;
-import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import com.guilhermezuriel.reduceme.application.services.keygen.KeyGenerationService;
+import com.guilhermezuriel.reduceme.application.services.keygen.dto.KeyDto;
+import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -11,16 +12,22 @@ import org.springframework.web.servlet.view.RedirectView;
 @RequestMapping
 public class KeyController {
 
-    private KeyGenerationService keyGenerationService;
+    private final KeyGenerationService keyGenerationService;
 
     public KeyController(KeyGenerationService keyGenerationService) {
         this.keyGenerationService = keyGenerationService;
     }
 
-    @PostMapping("/key/create")
-    public ResponseEntity<Key> createKey(@RequestBody CreateReducedUrlForm form) {
+    @PostMapping(value = "/key/create", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<KeyDto> createKey(@RequestBody CreateReducedUrlForm form) {
         var key =  this.keyGenerationService.generateKeys(form);
         return ResponseEntity.ok().body(key);
+    }
+
+    @PostMapping(value = "/key/create", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> createKeyv2(@RequestBody CreateReducedUrlForm form) {
+        var key =  this.keyGenerationService.generateKeys(form);
+        return ResponseEntity.ok().body(key.toString());
     }
 
     @GetMapping("/{keyHash}")

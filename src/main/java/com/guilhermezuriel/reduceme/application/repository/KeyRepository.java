@@ -11,9 +11,6 @@ import java.util.UUID;
 @Repository
 public interface KeyRepository extends CassandraRepository<Key, UUID> {
 
-    boolean existsKeyByKeyHash(String keyHash);
-
     @Query(allowFiltering = true)
     Optional<Key> findKeyByKeyHash(String keyHash);
-
 }

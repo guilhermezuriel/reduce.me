@@ -14,6 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
 public class Key {
 
     @PrimaryKey
@@ -22,6 +23,13 @@ public class Key {
     private final String keyHash;
     @Column("original_url")
     private final String originalUrl;
-    @Column("created_at")
-    private final LocalDateTime createdAt;
+    @Column("created_at")@Builder.Default
+    private final LocalDateTime createdAt = LocalDateTime.now();
+
+    @Override
+    public String toString() {
+        return "Key{" + ", keyHash='" + keyHash +
+                ", originalUrl='" + originalUrl +
+                ", createdAt=" + createdAt + '}';
+    }
 }
