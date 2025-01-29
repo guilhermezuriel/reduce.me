@@ -5,6 +5,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.session.Session;
+import com.guilhermezuriel.reduceme.application.config.exceptions.ApplicationException;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.cassandra.core.cql.CqlTemplate;
 import org.springframework.data.cassandra.core.cql.generator.CqlGenerator;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
@@ -64,7 +66,9 @@ public class RunCassandraMigrations implements InitializingBean {
                     """;
             session.execute(cql);
         }catch (Exception e) {
-            log.error("Some error occurred while executing v1_create_key_table", e);
+            throw ApplicationException.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Some error occurred while executing v1_create_key_table: " + e.getMessage()).build();
         }
     }
 
@@ -85,7 +89,9 @@ public class RunCassandraMigrations implements InitializingBean {
             String addColumn = QueryUtils.addColumn("keys", "expires_at", "timestamp");
             session.execute(addColumn);
         }catch (Exception e) {
-            log.error("Some error occurred while executing v1_create_key_table", e);
+            throw ApplicationException.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Some error occurred while executing v2_create_key_table: " + e.getMessage()).build();
         }
     }
 

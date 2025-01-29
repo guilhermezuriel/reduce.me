@@ -1,12 +1,14 @@
 package com.guilhermezuriel.reduceme.application.services.keygen;
 
 import com.guilhermezuriel.reduceme.application.Utils;
+import com.guilhermezuriel.reduceme.application.config.exceptions.ApplicationException;
 import com.guilhermezuriel.reduceme.application.model.Key;
 import com.guilhermezuriel.reduceme.application.repository.KeyRepository;
 import com.guilhermezuriel.reduceme.application.services.keygen.dto.KeyDto;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -39,10 +41,12 @@ public class KeyGenerationService {
     }
 
     public String getKeyByKeyHash(String keyHash) {
-        var keysTes = this.keyRepository.findAllWithMoreThanExpirationDate();
         Optional<Key> key = this.keyRepository.findKeyByKeyHash(keyHash);
         if(key.isEmpty()){
-            throw new IllegalArgumentException("Key not found");
+            throw ApplicationException.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message("Key Not Found")
+                    .build();
         }
         return key.get().getOriginalUrl();
     }
