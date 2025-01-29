@@ -33,8 +33,7 @@ public class IndexController {
             return "redirect:/home";
         }
         var key = this.keyGenerationService.generateKeys(form);
-        var reducedUrl = API_URL_BASE + key.keyHash();
-        var newUrlForm = new CreateReducedUrlForm(reducedUrl);
+        var newUrlForm = new CreateReducedUrlForm(key.reducedUrl());
         model.addAttribute("form", newUrlForm);
         return "copyKey";
     }
