@@ -14,7 +14,7 @@
 
 > | name      |  type     | data type               | description                                                           |
 > |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
-> | form      |  required | object (JSON or YAML)   | Form containing only the field "url"                                  |
+> | form      |  required | object (JSON)           | Form containing only the field "url"                                  |
 
 
 ##### Responses
