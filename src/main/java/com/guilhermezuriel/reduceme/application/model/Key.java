@@ -1,10 +1,11 @@
 package com.guilhermezuriel.reduceme.application.model;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,8 @@ public class Key {
     private final String originalUrl;
     @Column("created_at")@Builder.Default
     private final LocalDateTime createdAt = LocalDateTime.now();
+    @Column("expires_at")
+    private final LocalDateTime expiresAt;
 
     @Override
     public String toString() {

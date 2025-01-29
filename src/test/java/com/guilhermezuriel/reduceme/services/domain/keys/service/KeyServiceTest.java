@@ -27,7 +27,9 @@ public class KeyServiceTest {
     public void should_not_be_able_to_reduce_url_into_the_same_hash_twice(){
         CreateReducedUrlForm form = new CreateReducedUrlForm("http://localhost:8080/");
         var reducedUrl = Utils.digestUrl(form.url());
+        System.out.println("url1: "+reducedUrl);
         var reducedUrl2 = Utils.digestUrl(form.url());
+        System.out.println("url2: "+reducedUrl2);
         Assertions.assertNotEquals(reducedUrl, reducedUrl2);
     }
 }
