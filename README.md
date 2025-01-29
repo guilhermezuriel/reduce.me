@@ -50,6 +50,7 @@
 > | http code     | content-type                      | response                                                            |
 > |---------------|-----------------------------------|---------------------------------------------------------------------|
 > | `200`         | `text/html; charset=UTF-8`        | <html></html>                                                       |
+> | `404`         | `application/json`                | `{"code":"404","message":"Not Found"}`                              |
 
 ##### Example cURL
 
