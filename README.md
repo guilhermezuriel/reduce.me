@@ -5,10 +5,30 @@
 
 ------------------------------------------------------------------------------------------
 
-#### Creating a new shortened url
+### Techs:
 
+<img src="https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white"></img>
+<img src="https://img.shields.io/badge/cassandra-%231287B1.svg?style=for-the-badge&logo=apache-cassandra&logoColor=white"></img>
+<img src="https://img.shields.io/badge/Thymeleaf-%23005C0F.svg?style=for-the-badge&logo=Thymeleaf&logoColor=white"></img>
+<img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white"></img>
+<img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white"></img>
+
+
+## Running
+
+```sh
+docker compose up -d
+```
+## Acessing by browser
+ - You can test the API by browser, the page was made with Thymeleaf and Tailwind
+   `http://localhost:8080/` 
+  
+## Routes
+
+#### Creating a new shortened url
 <details>
  <summary><code>POST</code> <code><b>/</b></code> <code>key/create</code></summary>
+
 
 ##### Parameters
 
