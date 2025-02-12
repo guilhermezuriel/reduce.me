@@ -4,7 +4,6 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.session.Session;
 import com.guilhermezuriel.reduceme.application.config.exceptions.ApplicationException;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -13,8 +12,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.cassandra.core.cql.CqlTemplate;
-import org.springframework.data.cassandra.core.cql.generator.CqlGenerator;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +21,6 @@ import java.net.InetSocketAddress;
 @Slf4j
 @RequiredArgsConstructor
 public class RunCassandraMigrations implements InitializingBean {
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.v1_create_key_table();
-        this.v2_update_key_table();
-    }
-
     @Value("${spring.cassandra.contact-points}")
     private String contactPoints;
 
@@ -40,6 +30,12 @@ public class RunCassandraMigrations implements InitializingBean {
     @Getter
     @Setter
     private InetSocketAddress contactPoint;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.v1_create_key_table();
+        this.v2_update_key_table();
+    }
 
     @PostConstruct
     public void init() {
