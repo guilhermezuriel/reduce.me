@@ -5,7 +5,6 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.config.exceptions.ApplicationException;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
