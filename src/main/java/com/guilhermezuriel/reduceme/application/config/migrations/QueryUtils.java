@@ -21,6 +21,8 @@ public class QueryUtils {
         return builder.toString();
     }
 
+
+
     /**
      * Calculates the checksum of this string.
      *

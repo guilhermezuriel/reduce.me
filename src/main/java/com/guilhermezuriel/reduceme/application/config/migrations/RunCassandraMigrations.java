@@ -2,8 +2,10 @@ package com.guilhermezuriel.reduceme.application.config.migrations;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.config.exceptions.ApplicationException;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -15,7 +17,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -38,10 +46,47 @@ public class RunCassandraMigrations implements InitializingBean {
     }
 
     @PostConstruct
-    public void init() {
+    public void init(){
         log.info("------------------- Verifying migrations -----------------");
+        //todo : verify if the cql_migration_system table is present in the bank then execute migrations
         var contactPoint = new InetSocketAddress(contactPoints, port);
         this.setContactPoint(contactPoint);
+        this.checkFiles();
+
+    }
+
+    private void checkFiles(){
+        try (Stream<Path> paths = Files.list(Paths.get("src/main/resources/migrations"))) {
+            paths.forEach(this::readFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void readFile(Path file) {
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file);
+            String content = String.join("\n", lines);
+//            try(CqlSession session = CqlSession.builder().build()) {
+//                RunCassandraMigrations.columnExists(session, "system", "cms_cql_migration_system", )
+//            }
+            int checksum = QueryUtils.calculateChecksum(content);
+            int checksumStored = this.retrieveChecksumByVersionName(file.getFileName().toString());
+            //TODO: Verify if it was executed
+            //TODO: If it was executed -> Compare the checksum
+            if(checksum != checksumStored){
+                throw new RuntimeException("Checksum error: " + checksumStored + " != " + checksum);
+            }
+            //TODO: If was not executed -> Execute query + Store the executed query in the table
+
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int retrieveChecksumByVersionName(String versionName){
+        return 0;
     }
 
     public void v1_create_key_table() throws Exception {
@@ -89,6 +134,17 @@ public class RunCassandraMigrations implements InitializingBean {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .message("Some error occurred while executing v2_create_key_table: " + e.getMessage()).build();
         }
+    }
+
+    private static ColumnDefinitions migrationExecuted(CqlSession session, String versioName) {
+        String query = "SELECT checksum FROM cms_cql_migration_system " +
+                "WHERE version_name = ?";
+        PreparedStatement preparedStatement = session.prepare(query);
+        BoundStatement boundStatement = preparedStatement.bind(versioName);
+
+        ResultSet resultSet = session.execute(boundStatement);
+
+        return resultSet.getColumnDefinitions();
     }
 
     private static boolean columnExists(CqlSession session, String keyspace, String tableName, String columnName) {
