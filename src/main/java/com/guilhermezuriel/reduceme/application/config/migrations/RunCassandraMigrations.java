@@ -39,19 +39,29 @@ public class RunCassandraMigrations implements InitializingBean {
     private InetSocketAddress contactPoint;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        this.v1_create_key_table();
-        this.v2_update_key_table();
+    public void afterPropertiesSet(){
+        var contactPoint = this.getContactPoint();
+        try(CqlSession session = CqlSession.builder()
+                .addContactPoint(contactPoint)
+                .withLocalDatacenter("datacenter1")
+                .build()){
+            //todo : verify if the cql_migration_system table is present in the bank then execute migrations
+            var existsMigrationSystem =  RunCassandraMigrations.tableExists(session,"system", "cms_cql_migration_system");
+            if(!existsMigrationSystem){
+
+            }
+            this.checkFiles();
+        }
+        catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostConstruct
     public void init(){
         log.info("------------------- Verifying migrations -----------------");
-        //todo : verify if the cql_migration_system table is present in the bank then execute migrations
         var contactPoint = new InetSocketAddress(contactPoints, port);
         this.setContactPoint(contactPoint);
-        this.checkFiles();
-
     }
 
     private void checkFiles(){
@@ -155,5 +165,16 @@ public class RunCassandraMigrations implements InitializingBean {
         ResultSet resultSet = session.execute(boundStatement);
 
         return resultSet.one() != null;
+    }
+
+    private static boolean tableExists(CqlSession session, String keyspace, String tableName) {
+        String query = "SELECT column_name FROM system_schema.tables " +
+                "WHERE keyspace_name = ? AND table_name = ? ;";
+        PreparedStatement preparedStatement = session.prepare(query);
+        BoundStatement boundStatement = preparedStatement.bind(keyspace, tableName);
+
+        ResultSet resultSet = session.execute(boundStatement);
+
+        return resultSet.one() != null;}
     }
 }
