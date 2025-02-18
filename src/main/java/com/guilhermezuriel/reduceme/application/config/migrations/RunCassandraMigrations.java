@@ -46,9 +46,9 @@ public class RunCassandraMigrations implements InitializingBean {
                 .withLocalDatacenter("datacenter1")
                 .build()){
             //todo : verify if the cql_migration_system table is present in the bank then execute migrations
-            var existsMigrationSystem =  RunCassandraMigrations.tableExists(session,"system", "cms_cql_migration_system");
+            var existsMigrationSystem =  RunCassandraMigrations.tableExists(session,"system", "migration_system");
             if(!existsMigrationSystem){
-
+                RunCassandraMigrations.createMigrationSystemTable(session);
             }
             this.checkFiles();
         }
@@ -70,6 +70,16 @@ public class RunCassandraMigrations implements InitializingBean {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void createMigrationSystemTable(CqlSession session) {
+        var query = """
+                    CREATE TABLE migration_system(
+                        installed_rank int,
+                        version_name varchar,
+                        checksum bigint );
+                """;
+        session.execute(query);
     }
 
     private void readFile(Path file) {
@@ -98,55 +108,55 @@ public class RunCassandraMigrations implements InitializingBean {
         return 0;
     }
 
-    public void v1_create_key_table() throws Exception {
-        log.info("Executing v1_create_key_table");
-        var contactPoint1 = this.getContactPoint();
-        try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint1)
-                .withKeyspace("my_keyspace")
-                .withLocalDatacenter("datacenter1")
-                .build()) {
-            String cql = """
-                    CREATE TABLE IF NOT EXISTS keys (
-                        id UUID PRIMARY KEY,
-                        key_hash TEXT,
-                        original_url TEXT,
-                        created_at TIMESTAMP,
-                    );
-                    """;
-            session.execute(cql);
-        }catch (Exception e) {
-            throw ApplicationException.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Some error occurred while executing v1_create_key_table: " + e.getMessage()).build();
-        }
-    }
-
-    public void v2_update_key_table() throws Exception {
-        log.info("Executing v2_update_key_table");
-        var contactPoint1 = this.getContactPoint();
-        String keyspace  = "my_keyspace";
-
-        try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint1)
-                .withKeyspace(keyspace)
-                .withLocalDatacenter("datacenter1")
-                .build()) {
-            var columnExists = RunCassandraMigrations.columnExists(session, keyspace, "keys", "expires_at");
-            if (columnExists) {
-                return;
-            }
-            String addColumn = QueryUtils.addColumn("keys", "expires_at", "timestamp");
-            session.execute(addColumn);
-        }catch (Exception e) {
-            throw ApplicationException.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Some error occurred while executing v2_create_key_table: " + e.getMessage()).build();
-        }
-    }
+//    public void v1_create_key_table() throws Exception {
+//        log.info("Executing v1_create_key_table");
+//        var contactPoint1 = this.getContactPoint();
+//        try(CqlSession session = CqlSession.builder()
+//                .addContactPoint(contactPoint1)
+//                .withKeyspace("my_keyspace")
+//                .withLocalDatacenter("datacenter1")
+//                .build()) {
+//            String cql = """
+//                    CREATE TABLE IF NOT EXISTS keys (
+//                        id UUID PRIMARY KEY,
+//                        key_hash TEXT,
+//                        original_url TEXT,
+//                        created_at TIMESTAMP,
+//                    );
+//                    """;
+//            session.execute(cql);
+//        }catch (Exception e) {
+//            throw ApplicationException.builder()
+//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .message("Some error occurred while executing v1_create_key_table: " + e.getMessage()).build();
+//        }
+//    }
+//
+//    public void v2_update_key_table() throws Exception {
+//        log.info("Executing v2_update_key_table");
+//        var contactPoint1 = this.getContactPoint();
+//        String keyspace  = "my_keyspace";
+//
+//        try(CqlSession session = CqlSession.builder()
+//                .addContactPoint(contactPoint1)
+//                .withKeyspace(keyspace)
+//                .withLocalDatacenter("datacenter1")
+//                .build()) {
+//            var columnExists = RunCassandraMigrations.columnExists(session, keyspace, "keys", "expires_at");
+//            if (columnExists) {
+//                return;
+//            }
+//            String addColumn = QueryUtils.addColumn("keys", "expires_at", "timestamp");
+//            session.execute(addColumn);
+//        }catch (Exception e) {
+//            throw ApplicationException.builder()
+//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .message("Some error occurred while executing v2_create_key_table: " + e.getMessage()).build();
+//        }
+//    }
 
     private static ColumnDefinitions migrationExecuted(CqlSession session, String versioName) {
-        String query = "SELECT checksum FROM cms_cql_migration_system " +
+        String query = "SELECT checksum FROM migration_system " +
                 "WHERE version_name = ?";
         PreparedStatement preparedStatement = session.prepare(query);
         BoundStatement boundStatement = preparedStatement.bind(versioName);
