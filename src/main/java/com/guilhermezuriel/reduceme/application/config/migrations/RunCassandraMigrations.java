@@ -1,10 +1,8 @@
 package com.guilhermezuriel.reduceme.application.config.migrations;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
-import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.api.core.session.Session;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +24,7 @@ import java.util.stream.Stream;
 @Slf4j
 @RequiredArgsConstructor
 public class RunCassandraMigrations implements InitializingBean {
+    private final Session session;
     @Value("${spring.cassandra.contact-points}")
     private String contactPoints;
 
@@ -48,7 +47,7 @@ public class RunCassandraMigrations implements InitializingBean {
             if(!existsMigrationSystem){
                 RunCassandraMigrations.createMigrationSystemTable(session);
             }
-            this.checkFiles();
+            this.checkFiles(session);
         }
         catch (RuntimeException e) {
             throw new RuntimeException(e);
@@ -62,12 +61,32 @@ public class RunCassandraMigrations implements InitializingBean {
         this.setContactPoint(contactPoint);
     }
 
-    private void checkFiles(){
+    private void checkFiles(CqlSession session){
+        String lastMigrationName;
+        Integer lastMigrationRank;
+        ResultSet lastMigrationExecuted = RunCassandraMigrations.lastMigrationExecuted(session);
+        for(Row row : lastMigrationExecuted){
+            lastMigrationName = row.getString("version_name");
+            lastMigrationRank = row.getInt("installed_rank");
+        }
+        //TODO: Verify if the path file is the last migration then execute the rest
+        // TODO: Increment the insert of the rank upon the last installed rank value
         try (Stream<Path> paths = Files.list(Paths.get("src/main/resources/migrations"))) {
-            paths.forEach(this::readFile);
+            paths.forEach(path -> readFile(path, session));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static ResultSet lastMigrationExecuted(CqlSession session) {
+        String query = """
+                SELECT installed_rank, version_name 
+                FROM migration_system
+                ORDER BY installed_rank DESC
+                LIMIT 1;
+                """;
+        ResultSet resultSet = session.execute(query);
+        return resultSet;
     }
 
     private static void createMigrationSystemTable(CqlSession session) {
@@ -75,35 +94,38 @@ public class RunCassandraMigrations implements InitializingBean {
                     CREATE TABLE migration_system(
                         installed_rank int,
                         version_name varchar,
-                        checksum bigint );
+                        checksum bigint,
+                        primary key (version_name, installed_rank)
+                        ) WITH CLUSTERING ORDER BY (installed_rank asc);
                 """;
         session.execute(query);
     }
 
-    private void readFile(Path file) {
+    private void readFile(Path file, CqlSession session) {
         List<String> lines;
+        boolean executed = RunCassandraMigrations.itWasExecuted(file.getFileName().toString());
         try {
             lines = Files.readAllLines(file);
             String content = String.join("\n", lines);
-//            try(CqlSession session = CqlSession.builder().build()) {
-//                RunCassandraMigrations.columnExists(session, "system", "cms_cql_migration_system", )
-//            }
             int checksum = QueryUtils.calculateChecksum(content);
-            int checksumStored = this.retrieveChecksumByVersionName(file.getFileName().toString());
-            //TODO: Verify if it was executed
-            //TODO: If it was executed -> Compare the checksum
-            if(checksum != checksumStored){
-                throw new RuntimeException("Checksum error: " + checksumStored + " != " + checksum);
+            if(executed){
+                Integer checksumStored = 0;
+                ResultSet getChecksumStored = RunCassandraMigrations.migrationExecuted(session, file.getFileName().toString());
+                for(Row row : getChecksumStored){
+                    checksumStored = row.getInt("checksum");
+                    break;
+                }
+                if(checksum != checksumStored){
+                    throw new RuntimeException("Checksum error: " + checksumStored + " != " + checksum);
+                }
             }
-            //TODO: If was not executed -> Execute query + Store the executed query in the table
-
         }catch (IOException e){
             throw new RuntimeException(e);
         }
     }
 
-    private int retrieveChecksumByVersionName(String versionName){
-        return 0;
+    private static boolean itWasExecuted(String fileName){
+        return fileName != null && !fileName.isEmpty();
     }
 
 //    public void v1_create_key_table() throws Exception {
@@ -153,7 +175,7 @@ public class RunCassandraMigrations implements InitializingBean {
 //        }
 //    }
 
-    private static ColumnDefinitions migrationExecuted(CqlSession session, String versioName) {
+    private static ResultSet migrationExecuted(CqlSession session, String versioName) {
         String query = "SELECT checksum FROM migration_system " +
                 "WHERE version_name = ?";
         PreparedStatement preparedStatement = session.prepare(query);
@@ -161,7 +183,7 @@ public class RunCassandraMigrations implements InitializingBean {
 
         ResultSet resultSet = session.execute(boundStatement);
 
-        return resultSet.getColumnDefinitions();
+        return resultSet;
     }
 
     private static boolean columnExists(CqlSession session, String keyspace, String tableName, String columnName) {
