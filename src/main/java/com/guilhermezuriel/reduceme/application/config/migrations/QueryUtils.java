@@ -30,7 +30,7 @@ public class QueryUtils {
      * @return The crc-32 checksum of the bytes.
      */
     /* private -> for testing */
-    static int calculateChecksum(String str) {
+    static long calculateChecksum(String str) {
         final CRC32 crc32 = new CRC32();
 
         BufferedReader bufferedReader = new BufferedReader(new StringReader(str));
@@ -43,6 +43,6 @@ public class QueryUtils {
             throw new RuntimeException("Unable to calculate checksum: " +  e.getMessage());
         }
 
-        return (int) crc32.getValue();
+        return (long) crc32.getValue();
     }
 }

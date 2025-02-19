@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS keys (
+CREATE TABLE IF NOT EXISTS my_keyspace.keys (
        id UUID PRIMARY KEY,
        key_hash TEXT,
        original_url TEXT,
