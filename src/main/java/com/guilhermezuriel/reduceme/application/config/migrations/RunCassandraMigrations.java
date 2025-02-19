@@ -205,6 +205,8 @@ public class RunCassandraMigrations implements InitializingBean {
 
         ResultSet resultSet = session.execute(boundStatement);
 
-        return resultSet.one() != null;}
+        return resultSet.one() != null;
     }
+
 }
+
