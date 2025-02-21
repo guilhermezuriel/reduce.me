@@ -6,6 +6,7 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.session.Session;
+import com.guilhermezuriel.reduceme.application.config.migrations.queries.QueryUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,26 +39,26 @@ public class RunCassandraMigrations implements InitializingBean {
     @Value("${spring.cassandra.port}")
     private int port;
 
-    private final ResourceLoader resourceLoader;
-
     @Getter
     @Setter
     private InetSocketAddress contactPoint;
 
+    private final ResourceLoader resourceLoader;
+
     @Override
     public void afterPropertiesSet(){
         var contactPoint = this.getContactPoint();
-        this.createPublicIfNotExists();
         try(CqlSession session = CqlSession.builder()
                 .addContactPoint(contactPoint)
                 .withLocalDatacenter("datacenter1")
-                .withKeyspace("public")
                 .build()){
-            var existsMigrationSystem =  RunCassandraMigrations.tableExists(session, "migration_system");
+            MigrationService migrationService = new MigrationService(session);
+            migrationService.createPublicSchemaIfNotExists();
+            var existsMigrationSystem =  migrationService.tableExists( "migration_system");
             if(!existsMigrationSystem){
-                RunCassandraMigrations.createMigrationSystemTable(session);
+                migrationService.createMigrationSystemTable();
             }
-            checkFiles(session);
+            checkFiles(migrationService);
         }
         catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
@@ -74,25 +72,10 @@ public class RunCassandraMigrations implements InitializingBean {
         log.info("Executing migrations");
     }
 
-    private void createPublicIfNotExists(){
-        try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint)
-                .withLocalDatacenter("datacenter1")
-                .build()){
-            var createPublicIfNotExists = """
-                CREATE KEYSPACE IF NOT EXISTS public
-                WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
-                """;
-            session.execute(createPublicIfNotExists);
-        }catch (Exception e){
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void checkFiles(CqlSession session) throws IOException {
+    private void checkFiles(MigrationService migrationService) throws IOException {
         String lastMigrationName = "";
         long lastMigrationRank = 0;
-        Row lastMigrationExecuted = RunCassandraMigrations.lastMigrationExecuted(session);
+        Row lastMigrationExecuted = migrationService.lastMigrationExecuted();
         if(lastMigrationExecuted!= null){
             lastMigrationName = lastMigrationExecuted.getString("migration_name");
             lastMigrationRank = lastMigrationExecuted.getLong("installed_rank");
@@ -114,9 +97,10 @@ public class RunCassandraMigrations implements InitializingBean {
                     return "";
                 }}));
         for (Resource resource : resources) {
-            readFile(resource, session, executed.get(), executedCount);
+            readFile(resource, migrationService, executed.get(), executedCount);
             if (Objects.equals(resource.getFilename(), finalLastMigrationName)) {
                 executed.set(false);
+                log.info("Executing migration [{}]: {}", lastMigrationRank, lastMigrationName);
             }
         }
         } catch (IOException e) {
@@ -124,31 +108,7 @@ public class RunCassandraMigrations implements InitializingBean {
         }
     }
 
-    private static Row lastMigrationExecuted(CqlSession session) {
-        String query = """
-                SELECT *
-                FROM public.migration_system
-                WHERE version_name = '1.0'
-                ORDER BY installed_rank DESC
-                LIMIT 1;
-                """;
-        ResultSet resultSet = session.execute(query);
-        return resultSet.one();
-    }
-
-    private static void createMigrationSystemTable(CqlSession session) {
-        var query = """
-                    CREATE TABLE migration_system(
-                         version_name varchar,
-                         installed_rank bigint,
-                         migration_name varchar,
-                         checksum bigint,
-                         primary key(version_name, installed_rank)) WITH CLUSTERING ORDER BY (installed_rank DESC);
-                """;
-        session.execute(query);
-    }
-
-    private void readFile(Resource file, CqlSession session, boolean executed, AtomicLong lastMigrationRank) {
+    private void readFile(Resource file, MigrationService migrationService, boolean executed, AtomicLong lastMigrationRank) {
         String content;
         String migrationName = file.getFilename();
         try {
@@ -157,55 +117,19 @@ public class RunCassandraMigrations implements InitializingBean {
             }
             long checksum = QueryUtils.calculateChecksum(content);
             if(executed){
-                long checksumStored = RunCassandraMigrations.returnStoredChecksum(session, migrationName);
+                long checksumStored = migrationService.returnStoredChecksum(migrationName);
                 if(checksum != checksumStored){
                     throw new RuntimeException("Error while verifying migration: "+ migrationName + "\n Checksum error: Migration was modified \n"+ checksumStored + " != " + checksum);
                 }
             }else {
                 lastMigrationRank.set(lastMigrationRank.get() + 1);
                 log.info("Executing migration [{}]: {}", lastMigrationRank.get(), migrationName);
-                RunCassandraMigrations.registerMigrationOnSystem(session, lastMigrationRank.get(), migrationName, "1.0", checksum);
-                session.execute(content);
+                migrationService.registerMigrationOnSystem(lastMigrationRank.get(), migrationName, "1.0", checksum);
+                migrationService.executeQueryString(content);
             }
         }catch (IOException | RuntimeException e){
             throw new RuntimeException(e.getMessage());
         }
-    }
-
-    private static void registerMigrationOnSystem(CqlSession session, Long installedRank, String migrationName, String versionName, Long checksum){
-        String query = "INSERT INTO migration_system (installed_rank, migration_name, version_name, checksum) " +
-                "VALUES  (?, ?, ?, ?)";
-        PreparedStatement preparedStatement = session.prepare(query);
-        BoundStatement boundStatement = preparedStatement.bind(installedRank, migrationName, versionName, checksum);
-
-        session.execute(boundStatement);
-    }
-
-    private static long returnStoredChecksum(CqlSession session, String versioName) {
-        String query = "SELECT checksum FROM migration_system " +
-                "WHERE migration_name = ? ALLOW FILTERING;";
-        PreparedStatement preparedStatement = session.prepare(query);
-        BoundStatement boundStatement = preparedStatement.bind(versioName);
-
-        ResultSet resultSet = session.execute(boundStatement);
-        Row row = resultSet.one();
-
-        if(row != null){
-           return row.getLong("checksum");
-        }
-
-        throw new RuntimeException("Error while verifying migration: "+ versioName);
-    }
-
-    private static boolean tableExists(CqlSession session, String tableName) {
-        String query = "SELECT table_name FROM system_schema.tables " +
-                "WHERE keyspace_name = 'public' AND table_name = ? ;";
-        PreparedStatement preparedStatement = session.prepare(query);
-        BoundStatement boundStatement = preparedStatement.bind(tableName);
-
-        ResultSet resultSet = session.execute(boundStatement);
-
-        return resultSet.one() != null;
     }
 
 }
