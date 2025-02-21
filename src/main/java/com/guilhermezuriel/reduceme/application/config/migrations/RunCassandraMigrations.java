@@ -13,18 +13,25 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -36,6 +43,8 @@ public class RunCassandraMigrations implements InitializingBean {
 
     @Value("${spring.cassandra.port}")
     private int port;
+
+    private final ResourceLoader resourceLoader;
 
     @Getter
     @Setter
@@ -56,7 +65,7 @@ public class RunCassandraMigrations implements InitializingBean {
             }
             checkFiles(session);
         }
-        catch (RuntimeException e) {
+        catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -83,7 +92,7 @@ public class RunCassandraMigrations implements InitializingBean {
         }
     }
 
-    private void checkFiles(CqlSession session){
+    private void checkFiles(CqlSession session) throws IOException {
         String lastMigrationName = "";
         long lastMigrationRank = 0;
         Row lastMigrationExecuted = RunCassandraMigrations.lastMigrationExecuted(session);
@@ -98,10 +107,18 @@ public class RunCassandraMigrations implements InitializingBean {
         if(Objects.isNull(finalLastMigrationName) || finalLastMigrationName.isBlank()){
             executed.set(false);
         }
-        try (Stream<Path> paths = Files.list(Paths.get("src/main/resources/migrations")).sorted()) {
-            paths.forEach(path -> {
+//        try (Stream<Path> paths = Files.list(Paths.get("src/main/resources/db/migrations")).sorted()) {
+//            paths.forEach(path -> {
+//                readFile(path, session, executed.get(), executedCount);
+//                if(Objects.equals(path.getFileName().toString(), finalLastMigrationName)){
+//                    executed.set(false);
+//                }
+//            });
+        try {
+        List<Resource> resources = Arrays.stream(new PathMatchingResourcePatternResolver().getResources("classpath:/db/migrations/*.cql")).sorted().toList();
+            resources.forEach(path -> {
                 readFile(path, session, executed.get(), executedCount);
-                if(Objects.equals(path.getFileName().toString(), finalLastMigrationName)){
+                if (Objects.equals(path.getFilename(), finalLastMigrationName)) {
                     executed.set(false);
                 }
             });
@@ -134,22 +151,23 @@ public class RunCassandraMigrations implements InitializingBean {
         session.execute(query);
     }
 
-    private void readFile(Path file, CqlSession session, boolean executed, AtomicLong lastMigrationRank) {
-        List<String> lines;
-        String migrationName = file.getFileName().toString();
+    private void readFile(Resource file, CqlSession session, boolean executed, AtomicLong lastMigrationRank) {
+        String content;
+        String migrationName = file.getFilename();
         try {
-            lines = Files.readAllLines(file);
-            String content = String.join("\n", lines);
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+                content = reader.lines().collect(Collectors.joining("\n"));
+            }
             long checksum = QueryUtils.calculateChecksum(content);
             if(executed){
-                long checksumStored = RunCassandraMigrations.returnStoredChecksum(session, file.getFileName().toString());
+                long checksumStored = RunCassandraMigrations.returnStoredChecksum(session, migrationName);
                 if(checksum != checksumStored){
                     throw new RuntimeException("Error while verifying migration: "+ migrationName + "\n Checksum error: Migration was modified \n"+ checksumStored + " != " + checksum);
                 }
             }else {
                 lastMigrationRank.set(lastMigrationRank.get() + 1);
-                log.info("Executing migration ["+lastMigrationRank.get()+"]: "+migrationName);
-                RunCassandraMigrations.registerMigrationOnSystem(session, lastMigrationRank.get(), file.getFileName().toString(), "1.0", checksum);
+                log.info("Executing migration [{}]: {}", lastMigrationRank.get(), migrationName);
+                RunCassandraMigrations.registerMigrationOnSystem(session, lastMigrationRank.get(), migrationName, "1.0", checksum);
                 session.execute(content);
             }
         }catch (IOException | RuntimeException e){
@@ -180,17 +198,6 @@ public class RunCassandraMigrations implements InitializingBean {
         }
 
         throw new RuntimeException("Error while verifying migration: "+ versioName);
-    }
-
-    private static boolean columnExists(CqlSession session, String keyspace, String tableName, String columnName) {
-        String query = "SELECT column_name FROM system_schema.columns " +
-                "WHERE keyspace_name = ? AND table_name = ? AND column_name = ?";
-        PreparedStatement preparedStatement = session.prepare(query);
-        BoundStatement boundStatement = preparedStatement.bind(keyspace, tableName, columnName);
-
-        ResultSet resultSet = session.execute(boundStatement);
-
-        return resultSet.one() != null;
     }
 
     private static boolean tableExists(CqlSession session, String tableName) {
