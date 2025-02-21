@@ -16,6 +16,7 @@ public class Utils {
 
     private static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX, Pattern.CASE_INSENSITIVE);
 
+
     public static boolean isValidUrl(String url) {
         return URL_PATTERN.matcher(url).matches();
     }

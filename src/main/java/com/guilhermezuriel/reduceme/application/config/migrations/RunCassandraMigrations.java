@@ -25,10 +25,7 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -107,21 +104,21 @@ public class RunCassandraMigrations implements InitializingBean {
         if(Objects.isNull(finalLastMigrationName) || finalLastMigrationName.isBlank()){
             executed.set(false);
         }
-//        try (Stream<Path> paths = Files.list(Paths.get("src/main/resources/db/migrations")).sorted()) {
-//            paths.forEach(path -> {
-//                readFile(path, session, executed.get(), executedCount);
-//                if(Objects.equals(path.getFileName().toString(), finalLastMigrationName)){
-//                    executed.set(false);
-//                }
-//            });
+        String resourcesPath = "classpath:/db/migrations/*.cql";
         try {
-        List<Resource> resources = Arrays.stream(new PathMatchingResourcePatternResolver().getResources("classpath:/db/migrations/*.cql")).sorted().toList();
-            resources.forEach(path -> {
-                readFile(path, session, executed.get(), executedCount);
-                if (Objects.equals(path.getFilename(), finalLastMigrationName)) {
-                    executed.set(false);
-                }
-            });
+        Resource[] resources = Arrays.stream(new PathMatchingResourcePatternResolver().getResources(resourcesPath)).filter(resource -> QueryUtils.isValidMigrationPattern(resource.getFilename())).toArray(Resource[]::new);
+        Arrays.sort(resources, Comparator.comparing(resource -> {
+                try{
+                    return Objects.requireNonNull(resource.getFilename());}
+                catch (Exception e){
+                    return "";
+                }}));
+        for (Resource resource : resources) {
+            readFile(resource, session, executed.get(), executedCount);
+            if (Objects.equals(resource.getFilename(), finalLastMigrationName)) {
+                executed.set(false);
+            }
+        }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,13 +1,20 @@
 package com.guilhermezuriel.reduceme.application.config.migrations;
 
-import org.springframework.core.io.Resource;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 public class QueryUtils {
+
+    private static final String MIGRATION_REGEX = "^V\\d+__\\S+\\.cql$";
+    public static final Pattern MIGRATION_PATTERN = Pattern.compile(MIGRATION_REGEX, Pattern.CASE_INSENSITIVE);
+
+
+    public static boolean isValidMigrationPattern(String migrationPattern) {
+        return MIGRATION_PATTERN.matcher(migrationPattern).matches();
+    }
 
     public static String addColumn(String table, String column, String dataType) {
         var builder = new StringBuilder();
