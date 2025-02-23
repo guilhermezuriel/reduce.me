@@ -48,6 +48,11 @@ public class KeyGenerationService {
                     .message("Key Not Found")
                     .build();
         }
+        if(key.get().getExpiresAt().isBefore(LocalDateTime.now())){
+            throw ApplicationException.builder()
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .message("Key expired").build();
+        }
         return key.get().getOriginalUrl();
     }
 
