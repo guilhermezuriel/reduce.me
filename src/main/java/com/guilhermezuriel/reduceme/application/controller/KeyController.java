@@ -4,6 +4,7 @@ import com.guilhermezuriel.reduceme.application.services.keygen.KeyGenerationSer
 import com.guilhermezuriel.reduceme.application.services.keygen.dto.KeyDto;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ import org.springframework.web.servlet.view.RedirectView;
 @RequestMapping
 @RequiredArgsConstructor
 public class KeyController {
+
+    @Value("${reduceme.api_url_base}")
+    private String API_BASE_URL;
 
     private final KeyGenerationService keyGenerationService;
 
@@ -36,9 +40,13 @@ public class KeyController {
 
     @GetMapping("/{keyHash}")
     public RedirectView getKey(@PathVariable String keyHash) {
-        var original_url = this.keyGenerationService.getKeyByKeyHash(keyHash);
         RedirectView redirectView = new RedirectView();
-        redirectView.setUrl(original_url);
+        try {
+            var original_url = this.keyGenerationService.getKeyByKeyHash(keyHash);
+            redirectView.setUrl(original_url);
+        } catch (Exception e) {
+           redirectView.setUrl(API_BASE_URL + "/home");
+        }
         return redirectView;
     }
 }
