@@ -57,7 +57,7 @@ public class MigrationService {
     }
 
     protected void registerMigrationOnSystem(Long installedRank, String migrationName, String versionName, Long checksum){
-        String query = "INSERT INTO migration_system (installed_rank, migration_name, version_name, checksum) " +
+        String query = "INSERT INTO public.migration_system (installed_rank, migration_name, version_name, checksum) " +
                 "VALUES  (?, ?, ?, ?)";
         PreparedStatement preparedStatement = this.session.prepare(query);
         BoundStatement boundStatement = preparedStatement.bind(installedRank, migrationName, versionName, checksum);
