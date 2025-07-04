@@ -5,24 +5,134 @@
     <meta charset="UTF-8">
     <title>Reduce.me</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="bg-slate-900">
-    <main class=" h-screen justify-items-center content-center">
-    <form th:action="@{/home}" method="post" th:object="${form}" class="flex align-items-center justify-items-center flex-col">
-        <div class="flex items-center justify-items-center gap-4">
-            <label for="url">
-                <input type="text" placeholder="paste your url.com here" id="url" name="url" class="p-7 border-none w-96 bg-slate-900 h-8 flex text-xl text-slate-100 focus:outline-none hover:bg-slate-800/10 hover:rounded-sm " />
-            </label>
-            <div>
-                <button type="submit">
-                    <img th:src="@{/assets/key-return.svg}" alt="submit">
-                </button>
+<main class="h-screen justify-items-center content-center">
+    <div class="flex flex-col items-center justify-center gap-4 relative">
+        <h3 class="text-4xl text-white font-bold"> Reduce.me</h3>
+
+        <form th:action="@{/home}" method="post" th:object="${form}" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 mt-10 w-full max-w-4xl px-4" id="urlForm">
+            <input type="text" placeholder="Add a description" id="description" th:field="*{description}" class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+            <input type="url" placeholder="Paste your url.com here" id="url" th:field="*{url}" class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+            <button type="submit" class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition text-white px-6 py-3 rounded-md shadow-md" aria-label="Submit URL form">
+                <img th:src="@{/assets/key-return.svg}" alt="Submit" class="w-6 h-6"/>
+            </button>
+        </form>
+
+        <!-- Seção de Links -->
+        <div class="w-full max-w-4xl px-4">
+            <div class="flex items-center gap-3 mb-6">
+                <i class="fas fa-link text-2xl text-slate-400"></i>
+                <h4 class="text-2xl text-slate-400 font-semibold">Links</h4>
+            </div>
+
+            <!-- Container da Lista -->
+            <div class="space-y-4" id="urlsList">
+                <!-- Itens -->
+                <div th:each="url : ${urls}" class="url-item bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/50">
+                    <div class="flex flex-col gap-4">
+
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1">
+                                    <h5 class="text-white font-mono text-sm bg-slate-700/50 px-3 py-1 rounded-md inline-block" th:text="${url.description}"></h5>
+                                </div>
+                                <button
+                                        class="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-slate-700/30"
+                                        title="Delete"
+                                        th:attr="data-url-id=${url.keyHash}"
+                                        onclick="handleDelete(this)">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-external-link-alt text-green-400"></i>
+                                <a th:href="${url.completeUrl}" class="text-green-400 hover:text-green-300 transition-colors font-mono text-sm break-all" th:text="${url.completeUrl}"></a>
+                                <button class="text-slate-500 hover:text-slate-300 transition-colors" title="Copy link">
+                                    <i class="fas fa-copy text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 lg:gap-6">
+                            <div class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg">
+                                <i class="fas fa-eye text-purple-400"></i>
+                                <p class="text-white font-semibold text-sm" th:text="${url.counter}"></p>
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg">
+                                <i class="fas fa-calendar-alt text-orange-400"></i>
+                                <p class="text-white font-semibold text-sm" th:text="${url.createdAt}"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Estado vazio -->
+                <div id="emptyState" class="text-center py-12" th:classappend="${#lists.isEmpty(urls)} ? '' : ' hidden'">
+                    <div class="bg-slate-800/30 border border-slate-700/50 rounded-xl p-8">
+                        <i class="fas fa-link text-4xl text-slate-600 mb-4"></i>
+                        <h5 class="text-slate-400 text-lg font-medium mb-2">None link created</h5>
+                        <p class="text-slate-500 text-sm">Create your first link above!</p>
+                    </div>
+                </div>
             </div>
         </div>
-        <span class="w-140 h-1 bg-white"></span>
-    </form>
-    </main>
-</body>
+    </div>
+</main>
 
+<!-- Scripts -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.fa-copy').forEach(button => {
+            button.addEventListener('click', function () {
+                const linkElement = this.closest('.flex').querySelector('a');
+                const linkText = linkElement.textContent;
+
+                navigator.clipboard.writeText(linkText).then(() => {
+                    const originalIcon = this.className;
+                    this.className = 'fas fa-check text-xs text-green-400';
+                    setTimeout(() => {
+                        this.className = originalIcon;
+                    }, 2000);
+                });
+            });
+        });
+    });
+
+    function handleDelete(button) {
+        const keyHash = button.getAttribute("data-url-id");
+        if (!confirm('Tem certeza que deseja excluir este link?')) return;
+
+        fetch(`/keys/delete/${keyHash}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(response => {
+                if (response.ok) {
+                    const urlItem = button.closest('.url-item');
+                    if (urlItem) {
+                        urlItem.remove();
+
+                        // Verifica se ainda há itens
+                        const remainingItems = document.querySelectorAll('.url-item');
+                        const emptyState = document.getElementById("emptyState");
+                        if (remainingItems.length === 0) {
+                            emptyState.classList.remove("hidden");
+                        }
+                    }
+                } else {
+                    alert("Erro ao excluir o link.");
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Algo deu errado ao excluir.");
+            });
+    }
+</script>
+</body>
 </html>

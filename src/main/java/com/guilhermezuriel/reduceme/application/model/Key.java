@@ -28,6 +28,10 @@ public class Key {
     private final LocalDateTime createdAt = LocalDateTime.now();
     @Column("expires_at")
     private final LocalDateTime expiresAt;
+    @Column("description")
+    private final String description;
+    @Column("counter")
+    private Integer counter;
 
     @Override
     public String toString() {

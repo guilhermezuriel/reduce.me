@@ -19,4 +19,6 @@ public interface KeyRepository extends CassandraRepository<Key, UUID> {
             select * from my_keyspace.keys where expires_at < toTimestamp(now()) ALLOW FILTERING;
             """)
     List<Key> findAllWithMoreThanExpirationDate();
+
+    List<Key> findAllByIdIn(List<UUID> ids);
 }
