@@ -2,24 +2,19 @@ package com.guilhermezuriel.reduceme.application.config.migrations;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.session.Session;
-import com.guilhermezuriel.reduceme.application.config.migrations.queries.QueryUtils;
+import com.guilhermezuriel.reduceme.application.config.migrations.queries.CqlMigrationsUtils;
+import com.guilhermezuriel.reduceme.application.config.migrations.queries.MigrationSchemaCql;
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
@@ -31,26 +26,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class RunCassandraMigrations implements InitializingBean {
-    private final Session session;
-    @Value("${spring.cassandra.contact-points}")
-    private String contactPoints;
 
-    @Value("${spring.cassandra.port}")
-    private int port;
-
-    @Getter
-    @Setter
-    private InetSocketAddress contactPoint;
-
-    private final ResourceLoader resourceLoader;
+    private final CqlSession session;
 
     @Override
-    public void afterPropertiesSet(){
-        var contactPoint = this.getContactPoint();
-        try(CqlSession session = CqlSession.builder()
-                .addContactPoint(contactPoint)
-                .withLocalDatacenter("datacenter1")
-                .build()){
+    public void afterPropertiesSet() throws IOException {
             MigrationService migrationService = new MigrationService(session);
             migrationService.createPublicSchemaIfNotExists();
             var existsMigrationSystem =  migrationService.tableExists( "migration_system");
@@ -58,16 +38,10 @@ public class RunCassandraMigrations implements InitializingBean {
                 migrationService.createMigrationSystemTable();
             }
             checkFiles(migrationService);
-        }
-        catch (RuntimeException | IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @PostConstruct
     public void init(){
-        var contactPoint = new InetSocketAddress(contactPoints, port);
-        this.setContactPoint(contactPoint);
         log.info("Executing migrations");
     }
 
@@ -88,7 +62,9 @@ public class RunCassandraMigrations implements InitializingBean {
         }
         String resourcesPath = "classpath:/db/migrations/*.cql";
         try {
-        Resource[] resources = Arrays.stream(new PathMatchingResourcePatternResolver().getResources(resourcesPath)).filter(resource -> QueryUtils.isValidMigrationPattern(resource.getFilename())).toArray(Resource[]::new);
+        Resource[] resources = Arrays.stream(new PathMatchingResourcePatternResolver().getResources(resourcesPath))
+                .filter(resource -> CqlMigrationsUtils.isValidMigrationPattern(resource.getFilename()))
+                .toArray(Resource[]::new);
         Arrays.sort(resources, Comparator.comparing(resource -> {
                 try{
                     return Objects.requireNonNull(resource.getFilename());}
@@ -110,20 +86,21 @@ public class RunCassandraMigrations implements InitializingBean {
     private void readFile(Resource file, MigrationService migrationService, boolean executed, AtomicLong lastMigrationRank) {
         String content;
         String migrationName = file.getFilename();
+        String version = CqlMigrationsUtils.extractVersion(migrationName);
         try {
             try(BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
                 content = reader.lines().collect(Collectors.joining("\n"));
             }
-            long checksum = QueryUtils.calculateChecksum(content);
+            long checksum = CqlMigrationsUtils.calculateChecksum(content);
             if(executed){
-                long checksumStored = migrationService.returnStoredChecksum(migrationName);
+                long checksumStored = migrationService.returnStoredChecksum(version, migrationName);
                 if(checksum != checksumStored){
                     throw new RuntimeException("Error while verifying migration: "+ migrationName + "\n Checksum error: Migration was modified \n"+ checksumStored + " != " + checksum);
                 }
             }else {
                 lastMigrationRank.set(lastMigrationRank.get() + 1);
                 log.info("Executing migration [{}]: {}", lastMigrationRank.get(), migrationName);
-                migrationService.registerMigrationOnSystem(lastMigrationRank.get(), migrationName, "1.0", checksum);
+                migrationService.registerMigrationOnSystem(lastMigrationRank.get(), migrationName, version, checksum);
                 migrationService.executeQueryString(content);
             }
         }catch (IOException | RuntimeException e){

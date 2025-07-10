@@ -1,4 +1,4 @@
-package com.guilhermezuriel.reduceme.services.domain.keys.service;
+package com.guilhermezuriel.reduceme.application.service;
 
 import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
