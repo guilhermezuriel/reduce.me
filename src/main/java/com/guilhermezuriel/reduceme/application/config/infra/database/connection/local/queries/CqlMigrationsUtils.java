@@ -1,4 +1,4 @@
-package com.guilhermezuriel.reduceme.application.config.migrations.queries;
+package com.guilhermezuriel.reduceme.application.config.infra.database.connection.local.queries;
 
 import java.io.BufferedReader;
 import java.io.IOException;

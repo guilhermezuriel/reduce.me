@@ -1,8 +1,8 @@
-package com.guilhermezuriel.reduceme.application.config.migrations;
+package com.guilhermezuriel.reduceme.application.config.infra.database.connection.local;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.*;
-import com.guilhermezuriel.reduceme.application.config.migrations.queries.MigrationSchemaCql;
+import com.guilhermezuriel.reduceme.application.config.infra.database.connection.local.queries.MigrationSchemaCql;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,13 +19,13 @@ public class MigrationService {
     }
 
     public boolean tableExists(String tableName) {
-        PreparedStatement prepared = session.prepare(MigrationSchemaCql.selectTableExists());
+        PreparedStatement prepared = this.session.prepare(MigrationSchemaCql.selectTableExists());
         BoundStatement bound = prepared.bind(tableName);
-        return session.execute(bound).one() != null;
+        return this.session.execute(bound).one() != null;
     }
 
     public void createPublicSchemaIfNotExists() {
-        session.execute(MigrationSchemaCql.createKeyspaceIfNotExists());
+        this.session.execute(MigrationSchemaCql.createKeyspaceIfNotExists());
     }
 
     public void createMigrationSystemTable() {
@@ -33,19 +33,19 @@ public class MigrationService {
     }
 
     public Row lastMigrationExecuted() {
-        return session.execute(MigrationSchemaCql.selectLastExecutedMigration()).one();
+        return this.session.execute(MigrationSchemaCql.selectLastExecutedMigration()).one();
     }
 
     public void registerMigrationOnSystem(Long installedRank, String migrationName, String version, Long checksum) {
-        PreparedStatement prepared = session.prepare(MigrationSchemaCql.insertMigrationRecord());
+        PreparedStatement prepared = this.session.prepare(MigrationSchemaCql.insertMigrationRecord());
         BoundStatement bound = prepared.bind(installedRank, migrationName, version, checksum);
-        session.execute(bound);
+        this.session.execute(bound);
     }
 
     public long returnStoredChecksum(String version, String migrationName) {
-        PreparedStatement prepared = session.prepare(MigrationSchemaCql.selectChecksumByVersion());
+        PreparedStatement prepared = this.session.prepare(MigrationSchemaCql.selectChecksumByVersion());
         BoundStatement bound = prepared.bind(version);
-        Row row = session.execute(bound).one();
+        Row row = this.session.execute(bound).one();
         if (row != null) {
             return row.getLong("checksum");
         }

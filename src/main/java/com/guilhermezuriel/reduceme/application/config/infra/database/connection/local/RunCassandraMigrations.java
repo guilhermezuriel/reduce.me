@@ -1,13 +1,14 @@
-package com.guilhermezuriel.reduceme.application.config.migrations;
+package com.guilhermezuriel.reduceme.application.config.infra.database.connection.local;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.guilhermezuriel.reduceme.application.config.migrations.queries.CqlMigrationsUtils;
-import com.guilhermezuriel.reduceme.application.config.migrations.queries.MigrationSchemaCql;
+import com.guilhermezuriel.reduceme.application.config.infra.database.connection.local.queries.CqlMigrationsUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,11 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        name = "app.cassandra.migrations.enabled",
+        havingValue = "true",
+        matchIfMissing = false
+)
 public class RunCassandraMigrations implements InitializingBean {
 
     private final CqlSession session;

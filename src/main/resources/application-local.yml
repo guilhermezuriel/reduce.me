@@ -1,0 +1,11 @@
+spring:
+  cassandra:
+      port: ${DB_PORT}
+      contact-points: ${DB_CONTACT}
+      keyspace-name: ${DB_KEYSPACE}
+      username: ${DB_USER}
+      password: ${DB_PASSWORD}
+app:
+  cassandra:
+    migrations:
+      enabled: true

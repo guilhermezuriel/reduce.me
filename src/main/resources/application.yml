@@ -1,12 +1,7 @@
 spring:
+  profiles:
+    active: ${ACTIVE_PROFILE}
   application:
     name: "Reduce.me"
-  cassandra:
-    port: ${DB_PORT}
-    contact-points: ${DB_CONTACT}
-    keyspace-name: ${DB_KEYSPACE}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    local-datacenter: datacenter1
 reduceme:
-  api_url_base: http://localhost:8080/
+  api_url_base: ${API_URL}

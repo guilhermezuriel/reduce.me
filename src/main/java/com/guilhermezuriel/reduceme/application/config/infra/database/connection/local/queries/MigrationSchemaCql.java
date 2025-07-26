@@ -1,4 +1,4 @@
-package com.guilhermezuriel.reduceme.application.config.migrations.queries;
+package com.guilhermezuriel.reduceme.application.config.infra.database.connection.local.queries;
 
 public final class MigrationSchemaCql {
 
@@ -24,7 +24,7 @@ public final class MigrationSchemaCql {
                 installed_rank BIGINT,
                 migration_name TEXT,
                 checksum BIGINT,
-                PRIMARY KEY (version_name, installed_rank)
+                PRIMARY KEY (version, installed_rank)
             ) WITH CLUSTERING ORDER BY (installed_rank DESC);
             """, KEYSPACE, TABLE);
     }
@@ -39,7 +39,6 @@ public final class MigrationSchemaCql {
     public static String selectLastExecutedMigration() {
         return String.format("""
             SELECT * FROM %s.%s
-            WHERE version_name = '1.0'
             ORDER BY installed_rank DESC
             LIMIT 1;
             """, KEYSPACE, TABLE);
