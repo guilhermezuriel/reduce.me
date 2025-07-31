@@ -50,6 +50,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /opt/reduceme/
+            cd /opt/reduceme
             docker compose -f docker-compose-prd.yaml pull
             docker compose -f docker-compose-prd.yaml up -d
