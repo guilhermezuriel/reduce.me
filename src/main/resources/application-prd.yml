@@ -1,0 +1,18 @@
+app:
+  cassandra:
+    migrations:
+        enabled: false
+astra:
+  bundle-path: ${ASTRA_BUNDLE_PATH}
+  keyspace-name: ${ASTRA_KEYSPACE}
+  auth:
+    credentials:
+        username: ${ASTRA_AUTH_CREDENTIALS_USERNAME}
+        password: ${ASTRA_AUTH_CREDENTIALS_PASSWORD}
+datastax-java-driver:
+    basic:
+      request:
+          timeout: 10 second
+logging:
+  level:
+    root: INFO
