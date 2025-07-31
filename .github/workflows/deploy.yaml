@@ -48,7 +48,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }}
           script: |
             docker compose -f docker-compose-prd.yaml pull
             docker compose -f docker-compose-prd.yaml up -d
