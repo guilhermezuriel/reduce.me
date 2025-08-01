@@ -2,11 +2,11 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Reduce.me</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/x-icon" th:href="@{/favicon.png}"}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.png}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body class="bg-slate-900">
@@ -14,11 +14,17 @@
     <div class="flex flex-col items-center justify-center gap-4 relative">
         <h3 class="text-4xl text-white font-bold"> Reduce.me</h3>
 
-        <form th:action="@{/home}" method="post" th:object="${form}" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 mt-10 w-full max-w-4xl px-4" id="urlForm">
-            <input type="text" placeholder="Add a description" id="description" th:field="*{description}" class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
-            <input type="url" placeholder="Paste your url.com here" id="url" th:field="*{url}" class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
-            <button type="submit" class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition text-white px-6 py-3 rounded-md shadow-md" aria-label="Submit URL form">
-                <img th:src="@{/assets/key-return.svg}" alt="Submit" class="w-6 h-6"/>
+        <form th:action="@{/home}" method="post" th:object="${form}"
+              class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 mt-10 w-full max-w-4xl px-4" id="urlForm">
+            <input type="text" placeholder="Add a description" id="description" th:field="*{description}" required
+                   class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+            <input type="url" placeholder="Paste your url.com here" id="url" th:field="*{url}"
+                   required
+                   class="flex-1 p-3 rounded-md bg-slate-800 text-slate-200 placeholder-slate-400 text-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+            <button type="submit"
+                    class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition text-white px-6 py-3 rounded-md shadow-md"
+                    aria-label="Submit URL form">
+                <img th:src="@{/assets/key-return.svg}" alt="Submit" class="w-6 h-6" />
             </button>
         </form>
 
@@ -32,26 +38,29 @@
             <!-- Container da Lista -->
             <div class="space-y-4" id="urlsList">
                 <!-- Itens -->
-                <div th:each="url : ${urls}" class="url-item bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/50">
+                <div th:each="url : ${urls}"
+                     class="url-item bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/50">
                     <div class="flex flex-col gap-4">
 
                         <div class="flex-1 space-y-2">
                             <div class="flex items-center gap-3">
                                 <div class="flex-1">
-                                    <h5 class="text-white font-mono text-sm bg-slate-700/50 px-3 py-1 rounded-md inline-block" th:text="${url.description}"></h5>
+                                    <h5
+                                            class="text-white font-mono text-sm bg-slate-700/50 px-3 py-1 rounded-md inline-block"
+                                            th:text="${url.description}"></h5>
                                 </div>
                                 <button
                                         class="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-slate-700/30"
-                                        title="Delete"
-                                        th:attr="data-url-id=${url.keyHash}"
-                                        onclick="handleDelete(this)">
+                                        title="Delete" th:attr="data-url-id=${url.keyHash}" onclick="handleDelete(this)">
                                     <i class="fas fa-trash text-sm"></i>
                                 </button>
                             </div>
 
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-external-link-alt text-green-400"></i>
-                                <a th:href="${url.completeUrl}" class="text-green-400 hover:text-green-300 transition-colors font-mono text-sm break-all" th:text="${url.completeUrl}"></a>
+                                <a th:href="${url.completeUrl}"
+                                   class="text-green-400 hover:text-green-300 transition-colors font-mono text-sm break-all"
+                                   th:text="${url.completeUrl}"></a>
                                 <button class="text-slate-500 hover:text-slate-300 transition-colors" title="Copy link">
                                     <i class="fas fa-copy text-xs"></i>
                                 </button>
@@ -59,11 +68,13 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-4 lg:gap-6">
-                            <div class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg">
+                            <div
+                                    class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg select-none cursor-default">
                                 <i class="fas fa-eye text-purple-400"></i>
                                 <p class="text-white font-semibold text-sm" th:text="${url.counter}"></p>
                             </div>
-                            <div class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg">
+                            <div
+                                    class="flex items-center gap-2 bg-slate-700/30 px-3 py-2 rounded-lg select-none cursor-default">
                                 <i class="fas fa-calendar-alt text-orange-400"></i>
                                 <p class="text-white font-semibold text-sm" th:text="${url.createdAt}"></p>
                             </div>
@@ -81,6 +92,20 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Paginação -->
+            <nav aria-label="Pagination navigation" class="mt-6 flex justify-center items-center gap-2" id="paginationControls">
+                <button id="prevPage" aria-label="Previous page"
+                        class="px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    &laquo;
+                </button>
+                <!-- Números da página serão inseridos aqui -->
+                <div id="pageNumbers" class="flex gap-1"></div>
+                <button id="nextPage" aria-label="Next page"
+                        class="px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    &raquo;
+                </button>
+            </nav>
         </div>
     </div>
 </main>
@@ -88,52 +113,117 @@
 <!-- Scripts -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll('.fa-copy').forEach(button => {
-            button.addEventListener('click', function () {
-                const linkElement = this.closest('.flex').querySelector('a');
-                const linkText = linkElement.textContent;
-
-                navigator.clipboard.writeText(linkText).then(() => {
-                    const originalIcon = this.className;
-                    this.className = 'fas fa-check text-xs text-green-400';
-                    setTimeout(() => {
-                        this.className = originalIcon;
-                    }, 2000);
-                });
+        // Setup do botão copiar
+        function setupCopyButtons() {
+            document.querySelectorAll('.fa-copy').forEach(button => {
+                button.onclick = function () {
+                    const linkElement = this.closest('.flex').querySelector('a');
+                    const linkText = linkElement.textContent;
+                    navigator.clipboard.writeText(linkText).then(() => {
+                        const originalIcon = this.className;
+                        this.className = 'fas fa-check text-xs text-green-400';
+                        setTimeout(() => {
+                            this.className = originalIcon;
+                        }, 2000);
+                    });
+                };
             });
-        });
-    });
+        }
 
-    function handleDelete(button) {
-        const keyHash = button.getAttribute("data-url-id");
-        if (!confirm('Tem certeza que deseja excluir este link?')) return;
+        // Paginação
+        const itemsPerPage = 3;
+        const listContainer = document.getElementById('urlsList');
+        const items = Array.from(listContainer.querySelectorAll('.url-item'));
+        let currentPage = 1;
+        let totalPages = Math.ceil(items.length / itemsPerPage);
 
-        fetch(`/keys/delete/${keyHash}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        })
-            .then(response => {
-                if (response.ok) {
-                    const urlItem = button.closest('.url-item');
-                    if (urlItem) {
-                        urlItem.remove();
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        const pageNumbersContainer = document.getElementById('pageNumbers');
 
-                        // Verifica se ainda há itens
-                        const remainingItems = document.querySelectorAll('.url-item');
-                        const emptyState = document.getElementById("emptyState");
-                        if (remainingItems.length === 0) {
-                            emptyState.classList.remove("hidden");
-                        }
-                    }
+        function renderPageNumbers() {
+            pageNumbersContainer.innerHTML = "";
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.setAttribute('aria-label', 'Go to page ' + i);
+                btn.className = "px-3 py-1 rounded-md text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400";
+                if (i === currentPage) {
+                    btn.classList.add("bg-indigo-800", "font-semibold");
+                    btn.disabled = true;
                 } else {
-                    alert("Erro ao excluir o link.");
+                    btn.classList.add("bg-indigo-600");
+                    btn.disabled = false;
+                    btn.onclick = () => {
+                        showPage(i);
+                    };
                 }
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+
+        function showPage(page) {
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            currentPage = page;
+
+            items.forEach(item => item.style.display = 'none');
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            items.slice(start, end).forEach(item => item.style.display = '');
+
+            prevBtn.disabled = page === 1;
+            nextBtn.disabled = page === totalPages;
+
+            renderPageNumbers();
+            setupCopyButtons();
+        }
+
+        prevBtn.addEventListener('click', () => showPage(currentPage - 1));
+        nextBtn.addEventListener('click', () => showPage(currentPage + 1));
+
+        showPage(1);
+
+        // handleDelete mantido com atualização da paginação
+        window.handleDelete = function (button) {
+            const keyHash = button.getAttribute("data-url-id");
+            if (!confirm('Tem certeza que deseja excluir este link?')) return;
+
+            fetch(`/keys/delete/${keyHash}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
             })
-            .catch(error => {
-                console.error(error);
-                alert("Algo deu errado ao excluir.");
-            });
-    }
+                .then(response => {
+                    if (response.ok) {
+                        const urlItem = button.closest('.url-item');
+                        if (urlItem) {
+                            urlItem.remove();
+
+                            // Atualiza array items para paginação
+                            const index = items.indexOf(urlItem);
+                            if (index > -1) {
+                                items.splice(index, 1);
+                            }
+
+                            totalPages = Math.ceil(items.length / itemsPerPage) || 1;
+                            if (currentPage > totalPages) currentPage = totalPages;
+                            showPage(currentPage);
+
+                            // Estado vazio
+                            const emptyState = document.getElementById("emptyState");
+                            emptyState.classList.toggle("hidden", items.length !== 0);
+                        }
+                    } else {
+                        alert("Erro ao excluir o link.");
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("Algo deu errado ao excluir.");
+                });
+        };
+    });
 </script>
 </body>
+
 </html>

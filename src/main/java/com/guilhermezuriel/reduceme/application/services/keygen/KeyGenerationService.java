@@ -30,6 +30,8 @@ public class KeyGenerationService {
     private final KeyRepository keyRepository;
     private final SessionsRepository sessionsRepository;
 
+    private final int URL_EXPIRATION_TIME = Utils.TWO_MONTHS;
+
     @Value("${reduceme.api_url_base}")
     private String API_BASE_URL;
 
@@ -56,7 +58,7 @@ public class KeyGenerationService {
                 .originalUrl(form.url())
                 .description(form.description())
                 .keyHash(keyHash)
-                .expiresAt(LocalDateTime.now().plusSeconds(60 * 60 * 24))
+                .expiresAt(LocalDateTime.now().plusSeconds(URL_EXPIRATION_TIME))
                 .counter(0)
                 .build();
         this.keyRepository.insert(keyEntity);

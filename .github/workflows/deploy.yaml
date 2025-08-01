@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: 🏥 Check health with retry
         run: |
-          URL="http://${{ secrets.SSH_HOST }}:8080/actuator/health"
+          URL="${{secrets.HEALTH_CHECK_URL}}"
           MAX_ATTEMPTS=12
           SLEEP_SECONDS=5
           

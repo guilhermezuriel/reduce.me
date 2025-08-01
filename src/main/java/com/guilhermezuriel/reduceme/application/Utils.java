@@ -35,4 +35,6 @@ public class Utils {
         return new String(urlHashBytes).substring(0, 7);
     }
 
+    public static int TWO_MONTHS = 2 * 30 * 24 * 60 * 60;
+
 }

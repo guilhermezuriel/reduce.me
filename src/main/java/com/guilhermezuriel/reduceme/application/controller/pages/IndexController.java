@@ -2,6 +2,7 @@ package com.guilhermezuriel.reduceme.application.controller.pages;
 
 import com.guilhermezuriel.reduceme.application.Utils;
 import com.guilhermezuriel.reduceme.application.config.infra.InfraProperties;
+import com.guilhermezuriel.reduceme.application.model.Sessions;
 import com.guilhermezuriel.reduceme.application.services.keygen.KeyGenerationService;
 import com.guilhermezuriel.reduceme.application.services.keygen.form.CreateReducedUrlForm;
 import com.guilhermezuriel.reduceme.application.services.sessions.SessionService;
@@ -33,13 +34,8 @@ public class IndexController {
     public String indexHtml(@CookieValue(name = "session_id", required = false) String sessionId,
                             HttpServletResponse response,
                             Model model) {
-        if (sessionId == null) {
-            Cookie cookie =  this.sessionService.initializeSession();
-            response.addCookie(cookie);
-        } else {
-            this.sessionService.updateSession(sessionId);
-        }
-        ListSessionKeysResponse urls = this.keyGenerationService.getAllKeysBySessionId(sessionId);
+        Sessions sessions = sessionService.manageSession(sessionId, response);
+        ListSessionKeysResponse urls = this.keyGenerationService.getAllKeysBySessionId(sessions.getSessionId());
         model.addAttribute("urls", urls.keys());
         model.addAttribute("form", new CreateReducedUrlForm());
         return "index";
