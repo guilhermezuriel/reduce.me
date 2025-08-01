@@ -59,7 +59,7 @@ jobs:
         - name: 🏥 Check health
           run:
             |
-            URL="https://52.14.22.60:8080/actuator/health"
+            URL="http://52.14.22.60:8080/actuator/health"
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL)
             if [ "$STATUS" -ne 200 ]; then
               echo "❌ Health check failed for $URL"
