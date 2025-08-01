@@ -14,11 +14,11 @@ services:
       start_period: 60s
   reduce_api:
     container_name: reduce-app
-    image: guilhermezuriel/reduce-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    volumes:
-      - ./target:/app
     networks:
       - reduce-network
     depends_on:

@@ -20,11 +20,12 @@ public final class MigrationSchemaCql {
     public static String createMigrationSystemTable() {
         return String.format("""
             CREATE TABLE IF NOT EXISTS %s.%s (
+                partition_text TEXT,
                 version VARCHAR,
                 installed_rank BIGINT,
                 migration_name TEXT,
                 checksum BIGINT,
-                PRIMARY KEY (version, installed_rank)
+                PRIMARY KEY (partition_text, installed_rank)
             ) WITH CLUSTERING ORDER BY (installed_rank DESC);
             """, KEYSPACE, TABLE);
     }
@@ -39,15 +40,15 @@ public final class MigrationSchemaCql {
     public static String selectLastExecutedMigration() {
         return String.format("""
             SELECT * FROM %s.%s
-            ORDER BY installed_rank DESC
+            WHERE partition_text = 'last_migration'
             LIMIT 1;
             """, KEYSPACE, TABLE);
     }
 
     public static String insertMigrationRecord() {
         return String.format("""
-            INSERT INTO %s.%s (installed_rank, migration_name, version_name, checksum)
-            VALUES (?, ?, ?, ?);
+            INSERT INTO %s.%s (partition_text, installed_rank, migration_name, version, checksum)
+            VALUES ('last_migration', ?, ?, ?, ?);
             """, KEYSPACE, TABLE);
     }
 
@@ -61,7 +62,7 @@ public final class MigrationSchemaCql {
     public static String selectChecksumByVersion() {
         return String.format("""
             SELECT checksum FROM %s.%s
-            WHERE version_name = ?;
+            WHERE version = ?;
             """, KEYSPACE, TABLE);
     }
 }

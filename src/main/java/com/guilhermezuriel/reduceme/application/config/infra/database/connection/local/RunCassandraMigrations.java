@@ -55,7 +55,7 @@ public class RunCassandraMigrations implements InitializingBean {
         String lastMigrationName = "";
         long lastMigrationRank = 0;
         Row lastMigrationExecuted = migrationService.lastMigrationExecuted();
-        if(lastMigrationExecuted!= null){
+        if(lastMigrationExecuted != null){
             lastMigrationName = lastMigrationExecuted.getString("migration_name");
             lastMigrationRank = lastMigrationExecuted.getLong("installed_rank");
 

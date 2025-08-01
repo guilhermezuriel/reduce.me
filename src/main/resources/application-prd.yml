@@ -15,4 +15,10 @@ datastax-java-driver:
           timeout: 10 second
 logging:
   level:
+    org.springframework.web: DEBUG
     root: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
