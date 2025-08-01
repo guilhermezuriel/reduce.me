@@ -62,7 +62,7 @@ public final class MigrationSchemaCql {
     public static String selectChecksumByVersion() {
         return String.format("""
             SELECT checksum FROM %s.%s
-            WHERE version = ?;
+            WHERE version = ? ALLOW FILTERING;
             """, KEYSPACE, TABLE);
     }
 }
